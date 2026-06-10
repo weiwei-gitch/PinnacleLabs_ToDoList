@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>TaskFlow</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --a50:#FFF8F0;--a100:#FFE4B5;--a200:#FFC87A;--a400:#E8922A;--a600:#B86A10;--a800:#7A4008;--a900:#4A2204;
+  --bg:#FFF8F0;--surface:#FFFFFF;--surface2:#FFF3E5;
+  --border:rgba(180,100,20,0.13);--border-md:rgba(180,100,20,0.22);
+  --text:#2A1800;--text-muted:#8A6040;--text-hint:#BFA080;
+  --green:#3B6D11;--green-bg:#EAF3DE;--green-text:#639922;
+  --red:#A32D2D;--red-bg:#FCEBEB;--red-text:#E24B4A;
+  --blue:#185FA5;--blue-bg:#E6F1FB;--blue-text:#378ADD;
+  --sidebar-w:220px;
+  --radius:8px;--radius-lg:14px;
+  --transition:all .22s cubic-bezier(.4,0,.2,1);
+}
+[data-theme="dark"]{
+  --bg:#1A1008;--surface:#241608;--surface2:#2E1E0E;
+  --border:rgba(255,180,80,0.12);--border-md:rgba(255,180,80,0.22);
+  --text:#F5E8D0;--text-muted:#C09060;--text-hint:#7A5030;
+  --a50:#2E1E0E;--a100:#4A3010;--a200:#7A5020;
+  --green-bg:#1a2a0d;--green-text:#97C459;
+  --red-bg:#2a1515;--red-text:#E24B4A;
+  --blue-bg:#0c1e35;--blue-text:#5aabff;
+}
+
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;transition:var(--transition)}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:0.5px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;transition:var(--transition)}
+.sidebar-logo{padding:1.25rem 1.25rem 1rem;display:flex;align-items:center;gap:10px;border-bottom:0.5px solid var(--border)}
+.logo-icon{width:36px;height:36px;background:var(--a400);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;flex-shrink:0}
+.logo-text{font-size:17px;font-weight:600;color:var(--text);letter-spacing:-.02em}
+.logo-text span{color:var(--a400)}
+.nav{padding:.75rem .75rem;flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;padding:.6rem .875rem;border-radius:var(--radius);cursor:pointer;font-size:14px;color:var(--text-muted);transition:var(--transition);margin-bottom:2px;border:none;background:transparent;width:100%;text-align:left}
+.nav-item i{font-size:18px;flex-shrink:0}
+.nav-item:hover{background:var(--a50);color:var(--text)}
+.nav-item.active{background:linear-gradient(135deg,var(--a100),var(--a50));color:var(--a600);font-weight:500}
+.nav-item.active i{color:var(--a400)}
+.nav-section{font-size:11px;color:var(--text-hint);padding:.5rem .875rem .25rem;letter-spacing:.06em;text-transform:uppercase;margin-top:.5rem}
+.sidebar-footer{padding:.75rem;border-top:0.5px solid var(--border)}
+.theme-toggle{display:flex;align-items:center;gap:8px;padding:.5rem .875rem;border-radius:var(--radius);cursor:pointer;font-size:13px;color:var(--text-muted);border:0.5px solid var(--border);background:transparent;width:100%;transition:var(--transition)}
+.theme-toggle:hover{background:var(--a50);color:var(--text)}
+
+/* MAIN */
+.main{margin-left:var(--sidebar-w);flex:1;padding:2rem 2rem 2rem;min-height:100vh;transition:var(--transition)}
+
+/* PAGE */
+.page{display:none;animation:fadeIn .3s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* PAGE HEADER */
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem;flex-wrap:wrap;gap:12px}
+.page-title{font-size:22px;font-weight:600;color:var(--text)}
+.page-subtitle{font-size:13px;color:var(--text-muted);margin-top:3px}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:1.75rem}
+.stat-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.125rem;position:relative;overflow:hidden;transition:var(--transition)}
+.stat-card::before{content:'';position:absolute;top:0;right:0;width:60px;height:60px;border-radius:50%;opacity:.08;transform:translate(20px,-20px)}
+.stat-card.amber::before{background:var(--a400)}
+.stat-card.green::before{background:var(--green)}
+.stat-card.red::before{background:var(--red)}
+.stat-card.blue::before{background:var(--blue)}
+.stat-icon{font-size:20px;margin-bottom:.5rem}
+.stat-card.amber .stat-icon{color:var(--a400)}
+.stat-card.green .stat-icon{color:var(--green-text)}
+.stat-card.red .stat-icon{color:var(--red-text)}
+.stat-card.blue .stat-icon{color:var(--blue-text)}
+.stat-num{font-size:26px;font-weight:600;color:var(--text);line-height:1}
+.stat-lbl{font-size:12px;color:var(--text-muted);margin-top:4px}
+
+/* ADD FORM */
+.add-form{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1.25rem;transition:var(--transition)}
+.form-label{font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;font-weight:500}
+.form-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+input[type="text"],input[type="date"],select{height:38px;border:0.5px solid var(--border-md);border-radius:var(--radius);padding:0 12px;font-size:14px;background:var(--surface2);color:var(--text);outline:none;transition:var(--transition);font-family:inherit}
+input[type="text"]:focus,input[type="date"]:focus,select:focus{box-shadow:0 0 0 2.5px var(--a200);border-color:var(--a400)}
+input[type="text"].main-input{flex:1;min-width:200px}
+input[type="date"]{width:155px}
+select{width:140px}
+.btn-add{height:38px;padding:0 18px;border-radius:var(--radius);border:none;background:var(--a400);color:#fff;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;transition:var(--transition);white-space:nowrap}
+.btn-add:hover{background:var(--a600);transform:translateY(-1px)}
+.btn-add:active{transform:translateY(0)}
+
+/* FILTERS */
+.filters{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+.filter-btn{height:30px;padding:0 14px;border-radius:999px;border:0.5px solid var(--border);background:var(--surface);color:var(--text-muted);font-size:13px;cursor:pointer;transition:var(--transition)}
+.filter-btn:hover{border-color:var(--a200);color:var(--text)}
+.filter-btn.active{background:var(--a100);border-color:var(--a400);color:var(--a600);font-weight:500}
+.filters-right{margin-left:auto;display:flex;gap:6px}
+.sort-select{height:30px;padding:0 10px;font-size:13px;width:auto}
+
+/* TASK LIST */
+.task-list{display:flex;flex-direction:column;gap:8px}
+.task-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:.875rem 1rem;display:flex;align-items:flex-start;gap:10px;transition:var(--transition);animation:slideIn .25s ease}
+@keyframes slideIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+.task-card:hover{border-color:var(--border-md);box-shadow:0 2px 12px rgba(180,100,20,.07)}
+.task-card.done{opacity:.55}
+.task-card.overdue{border-left:3px solid var(--red-text)}
+
+.check-btn{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border-md);background:transparent;cursor:pointer;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;color:var(--a400);font-size:14px;transition:var(--transition)}
+.check-btn:hover{border-color:var(--a400);background:var(--a50);transform:scale(1.1)}
+.check-btn.checked{background:var(--a400);border-color:var(--a400);color:#fff}
+
+.task-body{flex:1;min-width:0}
+.task-title-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.task-title{font-size:15px;color:var(--text);word-break:break-word;line-height:1.4}
+.task-card.done .task-title{text-decoration:line-through;color:var(--text-hint)}
+
+/* PRIORITY BADGES */
+.priority-badge{font-size:11px;font-weight:500;padding:2px 8px;border-radius:999px;flex-shrink:0}
+.pri-high{background:var(--red-bg);color:var(--red)}
+.pri-medium{background:var(--a50);color:var(--a600)}
+.pri-low{background:var(--blue-bg);color:var(--blue)}
+
+.task-due{font-size:12px;color:var(--text-muted);margin-top:5px;display:flex;align-items:center;gap:4px}
+.task-due.overdue-lbl{color:var(--red)}
+
+/* PROGRESS BAR */
+.progress-wrap{margin-top:6px}
+.progress-label{display:flex;justify-content:space-between;font-size:11px;color:var(--text-hint);margin-bottom:4px}
+.progress-bar{height:4px;background:var(--border);border-radius:999px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--a400),var(--a200));border-radius:999px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+
+.task-actions{display:flex;gap:4px;flex-shrink:0}
+.icon-btn{width:30px;height:30px;border:0.5px solid var(--border);border-radius:var(--radius);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:16px;transition:var(--transition)}
+.icon-btn:hover{background:var(--surface2);color:var(--text);transform:scale(1.05)}
+.icon-btn.del:hover{color:var(--red);border-color:var(--red-text)}
+
+/* EDIT ROW */
+.edit-row{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.edit-row input[type="text"]{flex:1;min-width:140px;height:34px}
+.edit-row input[type="date"]{width:150px;height:34px}
+.edit-row select{height:34px;width:130px}
+.save-btn{height:34px;padding:0 14px;border-radius:var(--radius);border:none;background:var(--a400);color:#fff;font-size:13px;font-weight:500;cursor:pointer;transition:var(--transition)}
+.save-btn:hover{background:var(--a600)}
+.cancel-btn{height:34px;padding:0 14px;border-radius:var(--radius);border:0.5px solid var(--border-md);background:transparent;color:var(--text-muted);font-size:13px;cursor:pointer}
+
+/* EMPTY */
+.empty{text-align:center;padding:3rem 1rem;color:var(--text-muted);font-size:14px}
+.empty i{font-size:44px;display:block;margin-bottom:1rem;opacity:.3;color:var(--a400)}
+.empty strong{font-size:15px;color:var(--text-muted)}
+.empty p{color:var(--text-hint);font-size:13px;margin-top:5px}
+
+/* CALENDAR PAGE */
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.cal-nav{display:flex;align-items:center;gap:12px}
+.cal-month{font-size:18px;font-weight:600;color:var(--text)}
+.cal-nav-btn{width:32px;height:32px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:16px;transition:var(--transition)}
+.cal-nav-btn:hover{background:var(--a50);color:var(--a600);border-color:var(--a200)}
+.cal-grid{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.cal-days-header{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:0.5px solid var(--border)}
+.cal-day-hdr{padding:.625rem;text-align:center;font-size:12px;color:var(--text-muted);font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+.cal-body{display:grid;grid-template-columns:repeat(7,1fr)}
+.cal-cell{min-height:90px;border-right:0.5px solid var(--border);border-bottom:0.5px solid var(--border);padding:6px;cursor:pointer;transition:var(--transition);position:relative}
+.cal-cell:nth-child(7n){border-right:none}
+.cal-cell:hover{background:var(--a50)}
+.cal-cell.other-month .cal-date{color:var(--text-hint)}
+.cal-cell.today .cal-date{background:var(--a400);color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center}
+.cal-date{font-size:13px;font-weight:500;color:var(--text);margin-bottom:4px;width:26px;height:26px;display:flex;align-items:center;justify-content:center}
+.cal-dot{font-size:11px;padding:2px 6px;border-radius:4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;transition:var(--transition)}
+.cal-dot:hover{filter:brightness(.9)}
+.cal-dot.pri-high{background:var(--red-bg);color:var(--red)}
+.cal-dot.pri-medium{background:var(--a50);color:var(--a600)}
+.cal-dot.pri-low{background:var(--blue-bg);color:var(--blue)}
+.cal-dot.done-dot{background:var(--green-bg);color:var(--green)}
+.cal-more{font-size:11px;color:var(--text-hint);padding:1px 4px}
+
+/* SIDEBAR TASK COUNT BADGE */
+.nav-badge{margin-left:auto;background:var(--a100);color:var(--a600);font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px}
+
+/* RESPONSIVE */
+@media(max-width:700px){
+  .sidebar{width:64px}
+  .logo-text,.nav-item span,.nav-section,.sidebar-footer .theme-toggle span{display:none}
+  .nav-item{justify-content:center;padding:.6rem}
+  .main{margin-left:64px;padding:1.25rem 1rem}
+  .logo-icon{margin:0 auto}
+  .sidebar-logo{justify-content:center;padding:.875rem .5rem}
+  .theme-toggle{justify-content:center;padding:.5rem}
+  .nav-badge{display:none}
+}
+@media(max-width:480px){
+  input[type="date"]{width:100%}
+  select{width:100%}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><i class="ti ti-bolt" aria-hidden="true"></i></div>
+    <div class="logo-text">Task<span>Flow</span></div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Menu</div>
+    <button class="nav-item active" onclick="showPage('tasks',this)">
+      <i class="ti ti-checklist"></i><span>My Tasks</span>
+      <span class="nav-badge" id="nav-pending">0</span>
+    </button>
+    <button class="nav-item" onclick="showPage('calendar',this)">
+      <i class="ti ti-calendar-month"></i><span>Calendar</span>
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <i class="ti ti-moon" id="theme-icon"></i>
+      <span id="theme-label">Dark mode</span>
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- TASKS PAGE -->
+  <div class="page active" id="page-tasks">
+    <div class="page-header">
+      <div>
+        <div class="page-title">My Tasks</div>
+        <div class="page-subtitle">Manage and track your to-dos</div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card amber">
+        <div class="stat-icon"><i class="ti ti-list-check" aria-hidden="true"></i></div>
+        <div class="stat-num" id="s-total">0</div>
+        <div class="stat-lbl">Total tasks</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-icon"><i class="ti ti-circle-check" aria-hidden="true"></i></div>
+        <div class="stat-num" id="s-done">0</div>
+        <div class="stat-lbl">Completed</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-icon"><i class="ti ti-alert-circle" aria-hidden="true"></i></div>
+        <div class="stat-num" id="s-overdue">0</div>
+        <div class="stat-lbl">Overdue</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-icon"><i class="ti ti-clock" aria-hidden="true"></i></div>
+        <div class="stat-num" id="s-pending">0</div>
+        <div class="stat-lbl">Pending</div>
+      </div>
+    </div>
+
+    <!-- Overall progress -->
+    <div style="background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:1.25rem">
+      <div class="progress-label"><span style="font-size:13px;font-weight:500;color:var(--text)">Overall progress</span><span id="progress-pct">0%</span></div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    </div>
+
+    <div class="add-form">
+      <div class="form-label">Add new task</div>
+      <div class="form-row">
+        <input type="text" class="main-input" id="taskInput" placeholder="What needs to be done?"/>
+        <input type="date" id="dateInput"/>
+        <select id="priorityInput">
+          <option value="medium">Medium priority</option>
+          <option value="high">High priority</option>
+          <option value="low">Low priority</option>
+        </select>
+      </div>
+      <div style="display:flex;justify-content:flex-end">
+        <button class="btn-add" onclick="addTask()"><i class="ti ti-plus" aria-hidden="true"></i>Add task</button>
+      </div>
+    </div>
+
+    <div class="filters">
+      <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+      <button class="filter-btn" onclick="setFilter('pending',this)">Pending</button>
+      <button class="filter-btn" onclick="setFilter('done',this)">Done</button>
+      <button class="filter-btn" onclick="setFilter('overdue',this)">Overdue</button>
+      <button class="filter-btn" onclick="setFilter('high',this)">🔴 High</button>
+      <div class="filters-right">
+        <select class="sort-select" id="sortSelect" onchange="render()">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="due">By due date</option>
+          <option value="priority">By priority</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="task-list" id="taskList"></div>
+  </div>
+
+  <!-- CALENDAR PAGE -->
+  <div class="page" id="page-calendar">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Calendar</div>
+        <div class="page-subtitle">View your tasks by date</div>
+      </div>
+    </div>
+    <div class="cal-header">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="calPrev()"><i class="ti ti-chevron-left"></i></button>
+        <div class="cal-month" id="calMonthLabel"></div>
+        <button class="cal-nav-btn" onclick="calNext()"><i class="ti ti-chevron-right"></i></button>
+      </div>
+      <button class="filter-btn active" onclick="calGoToday()">Today</button>
+    </div>
+    <div class="cal-grid">
+      <div class="cal-days-header">
+        <div class="cal-day-hdr">Sun</div><div class="cal-day-hdr">Mon</div>
+        <div class="cal-day-hdr">Tue</div><div class="cal-day-hdr">Wed</div>
+        <div class="cal-day-hdr">Thu</div><div class="cal-day-hdr">Fri</div>
+        <div class="cal-day-hdr">Sat</div>
+      </div>
+      <div class="cal-body" id="calBody"></div>
+    </div>
+    <div style="margin-top:1rem;display:flex;gap:12px;flex-wrap:wrap">
+      <span style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--red-bg);border:1px solid var(--red);display:inline-block"></span>High priority</span>
+      <span style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--a50);border:1px solid var(--a400);display:inline-block"></span>Medium</span>
+      <span style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--blue-bg);border:1px solid var(--blue);display:inline-block"></span>Low priority</span>
+      <span style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--green-bg);border:1px solid var(--green);display:inline-block"></span>Done</span>
+    </div>
+  </div>
+
+</main>
+
+<script>
+let tasks = JSON.parse(localStorage.getItem('tf_tasks')||'[]');
+let filter='all', editId=null;
+let calYear=new Date().getFullYear(), calMonth=new Date().getMonth();
+
+function save(){localStorage.setItem('tf_tasks',JSON.stringify(tasks));}
+function todayStr(){return new Date().toISOString().split('T')[0];}
+function isOverdue(t){return !t.done && t.due && t.due < todayStr();}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function priLabel(p){return p==='high'?'High':p==='low'?'Low':'Medium';}
+function priClass(p){return p==='high'?'pri-high':p==='low'?'pri-low':'pri-medium';}
+const priOrder={high:0,medium:1,low:2};
+
+function showPage(id, btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(id==='calendar') renderCal();
+}
+
+function toggleTheme(){
+  const html=document.documentElement;
+  const isDark=html.getAttribute('data-theme')==='dark';
+  html.setAttribute('data-theme',isDark?'light':'dark');
+  document.getElementById('theme-icon').className=isDark?'ti ti-moon':'ti ti-sun';
+  document.getElementById('theme-label').textContent=isDark?'Dark mode':'Light mode';
+}
+
+function addTask(){
+  const inp=document.getElementById('taskInput');
+  const dt=document.getElementById('dateInput');
+  const pri=document.getElementById('priorityInput');
+  const txt=inp.value.trim();
+  if(!txt){inp.focus();return;}
+  tasks.unshift({id:Date.now(),title:txt,due:dt.value||null,priority:pri.value,done:false});
+  inp.value=''; dt.value=''; pri.value='medium';
+  save(); render(); inp.focus();
+}
+document.getElementById('taskInput').addEventListener('keydown',e=>{if(e.key==='Enter')addTask();});
+
+function toggle(id){
+  const t=tasks.find(x=>x.id===id);
+  if(t){t.done=!t.done;}
+  save(); render();
+}
+function del(id){tasks=tasks.filter(x=>x.id!==id);save();render();}
+function startEdit(id){editId=id;render();}
+function cancelEdit(){editId=null;render();}
+function saveEdit(id){
+  const te=document.getElementById('et-'+id);
+  const de=document.getElementById('ed-'+id);
+  const pe=document.getElementById('ep-'+id);
+  const t=tasks.find(x=>x.id===id);
+  if(t&&te.value.trim()){t.title=te.value.trim();t.due=de.value||null;t.priority=pe.value;}
+  editId=null;save();render();
+}
+
+function setFilter(f,btn){
+  filter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function fmtDate(d){
+  if(!d)return'';
+  const [y,m,day]=d.split('-');
+  return `${day}/${m}/${y}`;
+}
+
+function render(){
+  const td=todayStr();
+  const sort=document.getElementById('sortSelect').value;
+
+  let filtered=tasks.slice();
+  if(filter==='pending') filtered=filtered.filter(t=>!t.done);
+  else if(filter==='done') filtered=filtered.filter(t=>t.done);
+  else if(filter==='overdue') filtered=filtered.filter(t=>isOverdue(t));
+  else if(filter==='high') filtered=filtered.filter(t=>t.priority==='high');
+
+  if(sort==='oldest') filtered.sort((a,b)=>a.id-b.id);
+  else if(sort==='due') filtered.sort((a,b)=>{if(!a.due&&!b.due)return 0;if(!a.due)return 1;if(!b.due)return -1;return a.due.localeCompare(b.due);});
+  else if(sort==='priority') filtered.sort((a,b)=>priOrder[a.priority]-priOrder[b.priority]);
+
+  const total=tasks.length, done=tasks.filter(t=>t.done).length;
+  const overdue=tasks.filter(t=>isOverdue(t)).length;
+  const pending=tasks.filter(t=>!t.done).length;
+  const pct=total>0?Math.round(done/total*100):0;
+
+  document.getElementById('s-total').textContent=total;
+  document.getElementById('s-done').textContent=done;
+  document.getElementById('s-overdue').textContent=overdue;
+  document.getElementById('s-pending').textContent=pending;
+  document.getElementById('progress-pct').textContent=pct+'%';
+  document.getElementById('progress-fill').style.width=pct+'%';
+  document.getElementById('nav-pending').textContent=pending;
+
+  const list=document.getElementById('taskList');
+  if(!filtered.length){
+    const msgs={all:['No tasks yet','Add your first task above!'],pending:['All caught up!','No pending tasks.'],done:['Nothing completed yet','Mark a task done to see it here.'],overdue:['No overdue tasks',"You're right on schedule!"],high:['No high priority tasks','All high priority tasks are done.']};
+    const [t2,s]=msgs[filter]||msgs.all;
+    list.innerHTML=`<div class="empty"><i class="ti ti-clipboard-list" aria-hidden="true"></i><strong>${t2}</strong><p>${s}</p></div>`;
+    return;
+  }
+
+  list.innerHTML=filtered.map(t=>{
+    const over=isOverdue(t);
+    const isEd=editId===t.id;
+    const doneTasks=0; // individual task has no subtasks
+    return `<div class="task-card${t.done?' done':''}${over?' overdue':''}">
+      <button class="check-btn${t.done?' checked':''}" onclick="toggle(${t.id})" aria-label="${t.done?'Mark pending':'Mark done'}">
+        ${t.done?'<i class="ti ti-check" aria-hidden="true"></i>':''}
+      </button>
+      <div class="task-body">
+        <div class="task-title-row">
+          <span class="task-title">${esc(t.title)}</span>
+          <span class="priority-badge ${priClass(t.priority)}">${priLabel(t.priority)}</span>
+        </div>
+        ${t.due?`<div class="task-due${over?' overdue-lbl':''}"><i class="ti ti-calendar-event" aria-hidden="true"></i>${over?'Overdue &middot; ':''}Due ${fmtDate(t.due)}</div>`:''}
+        ${isEd?`<div class="edit-row">
+          <input type="text" id="et-${t.id}" value="${esc(t.title)}"/>
+          <input type="date" id="ed-${t.id}" value="${t.due||''}"/>
+          <select id="ep-${t.id}">
+            <option value="high"${t.priority==='high'?' selected':''}>High</option>
+            <option value="medium"${t.priority==='medium'?' selected':''}>Medium</option>
+            <option value="low"${t.priority==='low'?' selected':''}>Low</option>
+          </select>
+          <button class="save-btn" onclick="saveEdit(${t.id})">Save</button>
+          <button class="cancel-btn" onclick="cancelEdit()">Cancel</button>
+        </div>`:''}
+      </div>
+      <div class="task-actions">
+        <button class="icon-btn" onclick="startEdit(${t.id})" aria-label="Edit"><i class="ti ti-edit" aria-hidden="true"></i></button>
+        <button class="icon-btn del" onclick="del(${t.id})" aria-label="Delete"><i class="ti ti-trash" aria-hidden="true"></i></button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* CALENDAR */
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function calPrev(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCal();}
+function calNext(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCal();}
+function calGoToday(){calYear=new Date().getFullYear();calMonth=new Date().getMonth();renderCal();}
+
+function renderCal(){
+  document.getElementById('calMonthLabel').textContent=MONTHS[calMonth]+' '+calYear;
+  const first=new Date(calYear,calMonth,1).getDay();
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const daysInPrev=new Date(calYear,calMonth,0).getDate();
+  const td=todayStr();
+  const body=document.getElementById('calBody');
+  let cells='';
+  const total=Math.ceil((first+daysInMonth)/7)*7;
+
+  for(let i=0;i<total;i++){
+    let d,month,year,otherMonth=false;
+    if(i<first){d=daysInPrev-first+i+1;month=calMonth-1<0?11:calMonth-1;year=calMonth-1<0?calYear-1:calYear;otherMonth=true;}
+    else if(i>=first+daysInMonth){d=i-first-daysInMonth+1;month=calMonth+1>11?0:calMonth+1;year=calMonth+1>11?calYear+1:calYear;otherMonth=true;}
+    else{d=i-first+1;month=calMonth;year=calYear;}
+    const dateStr=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday=dateStr===td;
+    const dayTasks=tasks.filter(t=>t.due===dateStr);
+    const shown=dayTasks.slice(0,2);
+    const extra=dayTasks.length-shown.length;
+    cells+=`<div class="cal-cell${otherMonth?' other-month':''}${isToday?' today':''}">
+      <div class="cal-date">${d}</div>
+      ${shown.map(t=>`<div class="cal-dot ${t.done?'done-dot':priClass(t.priority)}" title="${esc(t.title)}">${esc(t.title)}</div>`).join('')}
+      ${extra>0?`<div class="cal-more">+${extra} more</div>`:''}
+    </div>`;
+  }
+  body.innerHTML=cells;
+}
+
+render();
+renderCal();
+</script>
+</body>
+</html>
